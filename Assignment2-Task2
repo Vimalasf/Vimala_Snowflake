@@ -1,0 +1,46 @@
+---Task 2: Query Optimization with Clustering Keys and verifyig the query performance 
+
+CREATE or replace TABLE PatientRecordslist (
+    patient_id NUMBER,
+    first_name VARCHAR2,
+    last_name VARCHAR2,
+    diagnosis VARCHAR2,
+    admission_date DATE,
+    discharge_date DATE,
+    address VARCHAR2
+);
+
+
+ 
+INSERT INTO PatientRecordslist (Patient_ID, First_Name, Last_Name, Diagnosis, Admission_date, Discharge_date, Address) VALUES
+(1, 'Vimala', 'R', 'Fever', '2024-11-01', '2024-11-05', '123 Main St, Hyderabad'),
+(2, 'Ved', 'M', 'Cold', '2024-11-10', '2024-11-20', '456 Elm St, Vyzag'),
+(3, 'Santhosh', 'M', 'Lupus', '2024-11-15', '2024-11-22', '789 Oak St, Hyderabad'),
+(4, 'Bob', 'Brown', 'Asthma', '2024-11-18', '2024-11-25', '101 Maple St, Springfield'),
+(5, 'John', 'Doe', 'Flu', '2024-11-01', '2024-11-05', '123 Main St, Springfield'),
+(6, 'Jane', 'Smith', 'Pneumonia', '2024-11-10', '2024-11-20', '456 Elm St, Springfield'),
+(7, 'Alice', 'Johnson', 'Bronchitis', '2024-11-15', '2024-11-22', '789 Oak St, Springfield'),
+(8, 'Bob', 'Brown', 'Asthma', '2024-11-18', '2024-11-25', '101 Maple St, Springfield'),
+(9, 'Charlie', 'Davis', 'COVID-19', '2024-11-20', '2024-11-30', '202 Pine St, Springfield'),
+(10, 'John', 'Doe', 'Flu', '2024-11-01', '2024-11-05', '123 Main St, Springfield'),
+(11, 'Jane', 'Smith', 'Pneumonia', '2024-11-10', '2024-11-20', '456 Elm St, Springfield'),
+(12, 'Alice', 'Johnson', 'Bronchitis', '2024-11-15', '2024-11-22', '789 Oak St, Springfield'),
+(13, 'Bob', 'Brown', 'Asthma', '2024-11-18', '2024-11-25', '101 Maple St, Springfield'),
+(14, 'Charlie', 'Davis', 'COVID-19', '2024-11-20', '2024-11-30', '202 Pine St, Springfield'),
+(15, 'John', 'Doe', 'Flu', '2024-11-01', '2024-11-05', '123 Main St, Springfield'),
+(16, 'Jane', 'Smith', 'Pneumonia', '2024-11-10', '2024-11-20', '456 Elm St, Springfield'),
+(17, 'Alice', 'Johnson', 'Bronchitis', '2024-11-15', '2024-11-22', '789 Oak St, Springfield'),
+(18, 'Bob', 'Brown', 'Asthma', '2024-11-18', '2024-11-25', '101 Maple St, Springfield'),
+(19, 'Charlie', 'Davis', 'COVID-19', '2024-11-20', '2024-11-30', '202 Pine St, Springfield'),
+(20, 'John', 'Doe', 'Flu', '2024-11-01', '2024-11-05', '123 Main St, Springfield'),
+(21, 'Jane', 'Smith', 'Flu', '2024-11-10', '2024-11-20', '456 Elm St, Springfield'),
+(22, 'Alice', 'Johnson', 'Flu', '2024-11-15', '2024-11-22', '789 Oak St, Springfield'),
+(23, 'Bob', 'Brown', 'Flu', '2024-11-18', '2024-11-25', '101 Maple St, Springfield');
+
+---------before adding the cluster key
+SELECT Diagnosis, count(*) from PatientRecordslist where admission_date > '2024-06-01' group by diagnosis;  ------execution took 592 ms
+-----------Adding the cluster key
+Alter table PatientRecordslist cluster by (admission_date);
+
+-----Porcessing after the clusterkey
+SELECT Diagnosis, count(*) from PatientRecordslist where admission_date > '2024-06-01' group by diagnosis; ----------execution took 150ms
