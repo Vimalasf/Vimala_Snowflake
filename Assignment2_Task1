@@ -1,0 +1,80 @@
+Task 1: Building a Pipeline with Streams and Tasks
+
+CREATE TABLE  PATIENT_T (   
+    PATIENT_ID NUMBER NOT NULL,
+    PATIENT_NAME VARCHAR2(40),
+    AGE NUMBER,
+    GENDER VARCHAR2(12),
+    PLACE VARCHAR2(40),
+    PHONE_NUMBER NUMBER,
+    DOCTOR_ID NUMBER,
+    REGISTRATION_DATE DATE
+    );
+
+ 
+INSERT INTO PATIENT_T (PATIENT_ID, PATIENT_NAME, AGE, GENDER,PLACE,PHONE_NUMBER,DOCTOR_ID, REGISTRATION_DATE) VALUES
+(1,'RVR',30,'F','HYD',99909999000,12,'27-NOV-2024'),
+(2,'Vimala',25,'F','HYD',99909999089,12,'25-NOV-2024'),
+(3,'Rani',30,'F','HYD',99909999111,12,'27-AUG-2024'),
+(4,'Ved',20,'F','HYD',99909999222,12,'10-SEP-2024'),
+(5,'Aadvik',10,'F','HYD',99909999333,12,'20-NOV-2024'),
+(6,'Santhosh',30,'F','HYD',99909999444,12,'23-NOV-2024'),
+(7,'Swathi',30,'F','HYD',99909999555,12,'25-OCT-2024'),
+(8,'Raj',30,'F','HYD',99909999666,12,'01-NOV-2024'),
+(9,'Bharat',25,'F','HYD',99909999777,12,'12-NOV-2024'),
+(10, 'Vinay', 35,'F','HYD',99909999898,12,'27-NOV-2024');
+
+select * from patient_t;
+
+create or replace stream Staging_patientStream on table patient_t;
+ 
+INSERT INTO PATIENT_T (PATIENT_ID, PATIENT_NAME, AGE, GENDER,PLACE,PHONE_NUMBER,DOCTOR_ID, REGISTRATION_DATE) VALUES
+(11,'Lucky',38,'F','HYD',99909999767,12,'27-NOV-2024'),
+(21,'Greg',25,'M','HYD',99909999089,12,'25-NOV-2024'); 
+ 
+select * from Staging_patientStream ;
+ 
+create or replace table Final_PatientRecords (Location varchar, PatientCount Number);
+ 
+ 
+create or replace task TASK_Staging_PatientRecords warehouse = 'COMPUTE_WH' schedule = '1 minute' 
+when SYSTEM$STREAM_HAS_DATA('Staging_patientStream') AS insert into Final_PatientRecords select Place, count(*) as patientCount from Staging_patientStream group by Regsitration;
+ 
+ 
+alter task TASK_Staging_PatientRecords resume;
+ 
+----- suspend after 5 min-------
+alter task TASK_Staging_PatientRecords suspend;
+ 
+ 
+select * from Staging_PatientStream ; --this should be empty
+ 
+select * from Final_PatientRecords; -- this should have 1 record
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+select * from patient_t;
+
+create or replace stream Staging_patientAdminStream on table patient_t;
+ 
+INSERT INTO PATIENT_T (PATIENT_ID, PATIENT_NAME, AGE, GENDER,PLACE,PHONE_NUMBER,DOCTOR_ID, REGISTRATION_DATE) VALUES
+(22,'Lucky',38,'F','HYD',99909999767,12,'10-NOV-2024'),
+(21,'Greg',25,'M','HYD',99909999089,12,'15-NOV-2024'); 
+ 
+select * from Staging_patientAdminStream ;
+ 
+create or replace table Final_PatientAdminRecords (AdmissionDate Date, PatientCount Number);
+ 
+ 
+create or replace task TASK_Staging_PatientAdmin warehouse = 'COMPUTE_WH' schedule = '1 minute' 
+when SYSTEM$STREAM_HAS_DATA('Staging_patientAdminStream') AS insert into Final_PatientAdminRecords select Registration_Date, count(*) as patientCount from Staging_patientAdminStream group by registration_date;
+ 
+ 
+alter task TASK_Staging_PatientAdmin resume;
+ 
+----- suspend after 5 min-------
+alter task TASK_Staging_PatientRecords suspend;
+ 
+ 
+select * from Staging_patientAdminStream ; --this should be empty
+ 
+select * from Final_PatientAdminRecords; -- this should have 1 record
